@@ -1,4 +1,3 @@
-import { supabase } from "$lib/supabaseClient";
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, RequestEvent } from "./$types";
 
@@ -19,7 +18,7 @@ function validatePassword(password: string) {
 
 export const actions = {
     // --- Login Action ---
-    login: async ({ request, cookies}: RequestEvent) => {
+    login: async ({ request, cookies, locals}: RequestEvent) => {
         const formData = await request.formData();
         const emailValue = formData.get('email');
         const passwordValue = formData.get('password');
@@ -41,7 +40,7 @@ export const actions = {
         }
 
         // Supabase Login Call
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await locals.supabase.auth.signInWithPassword({
             email: email,
             password: password,
         })
@@ -53,11 +52,12 @@ export const actions = {
             return fail(401, {error: 'Login failed'})
         }
         
+        console.log('successful login')
         redirect(303, '/')
     },
 
     // --- Signup Action ---
-    signup: async ({ request }: RequestEvent) => {
+    signup: async ({ request, locals }: RequestEvent) => {
         // Extract Data
         const formData = await request.formData()
         const emailValue = formData.get('email')
@@ -82,7 +82,7 @@ export const actions = {
         }
 
         // SupaBase Signup
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await locals.supabase.auth.signUp({
             email: email,
             password: password,
         })
