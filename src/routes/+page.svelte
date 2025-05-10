@@ -3,8 +3,16 @@
   import { page } from '$app/stores';
   import WidgetCard from '$lib/components/WidgetCard.svelte';
   import WeatherWidget from '$lib/components/WeatherWidget.svelte';
+  import GitHubWidget from '$lib/components/GitHubWidget.svelte';
 
   $: user = $page.data.user;
+  export let data;
+  export let form;
+
+  $: {
+  console.log("+page.svelte: data prop updated", JSON.stringify(data));
+  console.log("+page.svelte: form prop updated", JSON.stringify(form));
+}
 
 
 </script>
@@ -26,7 +34,7 @@
     </WidgetCard>
 
     <WidgetCard >
-        <p>Loading GitHub...</p>
+        <GitHubWidget />
     </WidgetCard>
 
     <WidgetCard >
