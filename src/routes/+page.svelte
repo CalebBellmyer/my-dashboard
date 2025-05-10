@@ -6,8 +6,6 @@
 
   $: user = $page.data.user;
 
-  export let data;
-
 
 </script>
 
@@ -23,24 +21,21 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
 
-      <WidgetCard>
-          {#if data?.weather || data?.error}
-            <WeatherWidget weather={data.weather} error={data.error} />
-            {:else}
-            <p class="text-gray-500">Preparing weather display...</p> {/if}
-        </WidgetCard>
+    <WidgetCard>
+        <WeatherWidget />
+    </WidgetCard>
 
-      <WidgetCard >
+    <WidgetCard >
         <p>Loading GitHub...</p>
-      </WidgetCard>
+    </WidgetCard>
 
-      <WidgetCard >
+    <WidgetCard >
         <p>Loading Megamillions info...</p>
-      </WidgetCard>
+    </WidgetCard>
 
-      <WidgetCard >
+    <WidgetCard >
         <p>Reading tracker and notes...</p>
-      </WidgetCard>
+    </WidgetCard>
 
       </div>
   </main>

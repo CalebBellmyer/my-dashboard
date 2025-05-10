@@ -1,65 +1,98 @@
 <script lang="ts">
-  import { onMount } from 'svelte'; // Import onMount for logging
+  import { onMount } from 'svelte';
 
-  // Define the expected shape of the weather data prop
-  export let weather: {
+  // Local state for the weather data, error, and loading status
+  let localWeather: {
     temp?: number;
     description?: string;
     icon?: string;
-    cityName?: string; // Optional: if you decide to pass city name from API
+    cityName?: string;
   } | null = null;
+  let localError: string | null = null;
+  let isLoading: boolean = true; // Start in loading state
 
-  // Define a prop for potential error messages
-  export let error: string | null = null;
-
-  // Base URL for OpenWeatherMap icons
   const iconBaseUrl = "https://openweathermap.org/img/wn/";
+  $: iconUrl = localWeather?.icon ? `${iconBaseUrl}${localWeather.icon}@2x.png` : null;
 
-  // Reactive statement to construct the full icon URL if an icon code is available
-  // The @2x.png suffix gets a larger version of the icon.
-  $: iconUrl = weather?.icon ? `${iconBaseUrl}${weather.icon}@2x.png` : null;
+  // This function will run when the component is first mounted to the DOM
+  onMount(async () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          // console.log("Latitude:", lat, "Longitude:", lon);
 
-  // Log the weather data and iconUrl when the weather prop changes
-  $: {
-    if (weather) {
-      // console.log("WeatherWidget received weather data:", weather);
-      // console.log("WeatherWidget generated iconUrl:", iconUrl);
+          try {
+            // Fetch weather data from our own API endpoint, passing lat and lon
+            // We will create this API endpoint in the next step.
+            const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ message: response.statusText }));
+              throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            localWeather = data; // Assuming the API returns data in the expected format
+            localError = null;
+          } catch (e: any) {
+            console.error("Error fetching weather:", e);
+            localError = e.message || "Failed to fetch weather data.";
+            localWeather = null;
+          } finally {
+            isLoading = false;
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error.message);
+          localError = `Geolocation error: ${error.message}. Please ensure location services are enabled.`;
+          // Optionally, you could try to fetch weather for a default location here.
+          // For now, we'll just show the error.
+          localWeather = null;
+          isLoading = false;
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      localError = "Geolocation is not supported by this browser.";
+      localWeather = null;
+      isLoading = false;
     }
-    if (error) {
-      // console.log("WeatherWidget received error:", error);
-    }
-  }
+  });
 
 </script>
 
 <div class="flex flex-col h-full text-gray-300 flex-grow">
   <h3 class="text-lg font-semibold text-purple-400 mb-3 text-center md:text-left">
-    Weather
+    Current Weather
   </h3>
 
   <div class="flex-grow flex flex-col items-center justify-center">
-    {#if error}
-      <p class="text-red-400 text-sm">Error: {error}</p>
-    {:else if weather && weather.temp !== undefined && weather.description}
+    {#if isLoading}
+      <p class="text-gray-500">Fetching your location & weather...</p>
+    {:else if localError}
+      <p class="text-red-400 text-sm px-2 text-center">Error: {localError}</p>
+    {:else if localWeather && localWeather.temp !== undefined && localWeather.description}
       <div class="text-center">
-        {#if weather.cityName}
-          <p class="text-xl font-semibold text-purple-300">{weather.cityName}</p>
+        {#if localWeather.cityName}
+          <p class="text-xl font-semibold text-purple-300">{localWeather.cityName}</p>
         {/if}
         
         {#if iconUrl}
-          <img src={iconUrl} alt={weather.description ?? 'Weather icon'} class="mx-auto w-16 h-16 md:w-20 md:h-20" />
-        {:else if weather?.icon}
-          <p class="text-xs text-red-300">(Missing icon: {weather.icon})</p>
+          <img src={iconUrl} alt={localWeather.description ?? 'Weather icon'} class="mx-auto w-16 h-16 md:w-20 md:h-20" />
+        {:else if localWeather?.icon}
+          <p class="text-xs text-red-300">(Missing icon: {localWeather.icon})</p>
         {/if}
         
         <p class="text-3xl md:text-4xl font-bold text-white">
-          {Math.round(weather.temp)}&deg;F
+          {Math.round(localWeather.temp)}&deg;F
         </p>
         
-        <p class="text-md capitalize text-gray-400">{weather.description}</p>
+        <p class="text-md capitalize text-gray-400">{localWeather.description}</p>
       </div>
     {:else}
-      <p class="text-gray-500">Loading weather data...</p>
+      <p class="text-gray-500">Weather data unavailable.</p>
     {/if}
   </div>
 </div>
