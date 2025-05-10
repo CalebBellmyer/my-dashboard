@@ -14,41 +14,76 @@
   const iconBaseUrl = "https://openweathermap.org/img/wn/";
   $: iconUrl = localWeather?.icon ? `${iconBaseUrl}${localWeather.icon}@2x.png` : null;
 
-  // This function will run when the component is first mounted to the DOM
+  // --- Caching Constants ---
+  const CACHE_KEY_WEATHER = 'cachedWeatherData';
+  const CACHE_KEY_TIMESTAMP = 'cachedWeatherTimestamp';
+  const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+  // Function to fetch weather data (will be called if cache is stale or missing)
+  async function fetchWeatherData(lat: number, lon: number) {
+    isLoading = true;
+    localError = null; // Clear previous errors
+    try {
+      const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      localWeather = data;
+
+      // Save to cache
+      localStorage.setItem(CACHE_KEY_WEATHER, JSON.stringify(data));
+      localStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString());
+      console.log("WeatherWidget: Fetched new data and cached it.");
+
+    } catch (e: any) {
+      console.error("Error fetching weather:", e);
+      localError = e.message || "Failed to fetch weather data.";
+      localWeather = null; // Clear weather data on error
+    } finally {
+      isLoading = false;
+    }
+  }
+
   onMount(async () => {
+    const cachedWeatherString = localStorage.getItem(CACHE_KEY_WEATHER);
+    const cachedTimestampString = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+
+    if (cachedWeatherString && cachedTimestampString) {
+      const cachedTimestamp = parseInt(cachedTimestampString, 10);
+      const now = Date.now();
+
+      if (now - cachedTimestamp < CACHE_DURATION_MS) {
+        // Cache is fresh, use it
+        try {
+          localWeather = JSON.parse(cachedWeatherString);
+          localError = null;
+          isLoading = false;
+          console.log("WeatherWidget: Loaded weather data from fresh cache.");
+          return; // Exit onMount early, no need to fetch
+        } catch (e) {
+          console.error("Error parsing cached weather data:", e);
+          // If parsing fails, proceed to fetch new data
+        }
+      } else {
+        console.log("WeatherWidget: Cache is stale.");
+      }
+    } else {
+      console.log("WeatherWidget: No weather data in cache.");
+    }
+
+    // If cache is not fresh or doesn't exist, or if parsing failed, proceed with geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          // console.log("Latitude:", lat, "Longitude:", lon);
-
-          try {
-            // Fetch weather data from our own API endpoint, passing lat and lon
-            // We will create this API endpoint in the next step.
-            const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({ message: response.statusText }));
-              throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            localWeather = data; // Assuming the API returns data in the expected format
-            localError = null;
-          } catch (e: any) {
-            console.error("Error fetching weather:", e);
-            localError = e.message || "Failed to fetch weather data.";
-            localWeather = null;
-          } finally {
-            isLoading = false;
-          }
+          fetchWeatherData(lat, lon); // Call the new function
         },
         (error) => {
           console.error("Error getting location:", error.message);
           localError = `Geolocation error: ${error.message}. Please ensure location services are enabled.`;
-          // Optionally, you could try to fetch weather for a default location here.
-          // For now, we'll just show the error.
           localWeather = null;
           isLoading = false;
         }
