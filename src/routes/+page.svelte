@@ -4,6 +4,7 @@
   import WidgetCard from '$lib/components/WidgetCard.svelte';
   import WeatherWidget from '$lib/components/WeatherWidget.svelte';
   import GitHubWidget from '$lib/components/GitHubWidget.svelte';
+  import LottoWidget from '$lib/components/LottoWidget.svelte';
 
   $: user = $page.data.user;
   export let data;
@@ -38,7 +39,7 @@
     </WidgetCard>
 
     <WidgetCard >
-        <p>Loading Megamillions info...</p>
+        <LottoWidget />
     </WidgetCard>
 
     <WidgetCard >
