@@ -17,12 +17,12 @@
   let hours: string | number = '00';
   let minutes: string | number = '00';
   let seconds: string | number = '00';
-  let countdownInterval: any; // For setInterval ID
+  let countdownInterval: any; 
 
   // --- Caching Constants ---
   const CACHE_KEY_LOTTO_DATA = 'cachedLottoData';
   const CACHE_KEY_LOTTO_TIMESTAMP = 'cachedLottoTimestamp';
-  // CACHE_DURATION_MS is no longer used for fixed duration, logic changes below
+  
 
   function formatNumber(num: number | undefined): string {
     if (num === undefined) return 'N/A';
@@ -63,8 +63,7 @@
         hours = '00';
         minutes = '00';
         seconds = '00';
-        // Consider fetching new data as drawing has passed
-        // fetchLottoInfo(true); // Force fetch
+        fetchLottoInfo(true); // Force fetch
         return;
       }
 
@@ -77,7 +76,7 @@
 
   async function fetchLottoInfo(forceFetch: boolean = false) {
     isLoading = true;
-    error = null; // Clear previous errors
+    error = null;
 
     if (!forceFetch) {
       const cachedDataString = localStorage.getItem(CACHE_KEY_LOTTO_DATA);
@@ -99,10 +98,9 @@
             startCountdown(lottoInfo?.nextDrawingDate);
             isLoading = false;
             console.log("LottoWidget: Loaded lotto data from fresh cache (same day).");
-            return; // Exit onMount early, no need to fetch
+            return;
           } catch (e) {
             console.error("Error parsing cached lotto data:", e);
-            // If parsing fails, proceed to fetch new data
           }
         } else {
           console.log("LottoWidget: Lotto cache is stale (from a previous day).");
@@ -112,7 +110,6 @@
       }
     }
 
-    // If cache is not fresh or doesn't exist, or if parsing failed, proceed to fetch
     try {
       const response = await fetch('/api/lotto-info');
       if (!response.ok) {
@@ -162,7 +159,7 @@
     {:else if lottoInfo}
       <div class="text-center w-full">
         <div class="mb-2">
-          <p class="text-sm text-gray-400">Next Estimated Jackpot (Annuity)</p>
+          <p class="text-sm text-gray-400">Estimated Jackpot</p>
           <p class="text-3xl md:text-4xl font-bold text-white">
             {formatNumber(lottoInfo.nextJackpotAnnuity)}
           </p>
