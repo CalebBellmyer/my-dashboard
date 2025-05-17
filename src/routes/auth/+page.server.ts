@@ -16,7 +16,7 @@ function validatePassword(password: string) {
     return passwordRegex.test(password)
 }
 
-export const actions = {
+export const actions: Actions = {
     // --- Login Action ---
     login: async ({ request, cookies, locals}: RequestEvent) => {
         const formData = await request.formData();
@@ -24,20 +24,11 @@ export const actions = {
         const passwordValue = formData.get('password');
 
         if (typeof emailValue !== 'string' || typeof passwordValue !== 'string') {
-        return fail(400, { error: 'Email and password must be provided as text.' });
+        return fail(400, { error: 'Email and password must be provided as text.', email: emailValue });
         }
 
-        const email = emailValue;
+        const email = emailValue.trim();
         const password = passwordValue; 
-
-        // Validate data
-        if (!validateEmail(email)) {
-            return fail(400, {error: 'Error invalid email.'})
-        }
-
-        if (!validatePassword(password)) {
-            return fail(400, {error: 'Error invalid password'})
-        }
 
         // Supabase Login Call
         const { data, error } = await locals.supabase.auth.signInWithPassword({
@@ -49,7 +40,7 @@ export const actions = {
         //  -Check for error
         if (error) {
             console.error("supabase login error:", error.message, error)
-            return fail(401, {error: 'Login failed'})
+            return fail(401, {error: 'Login failed', email: emailValue})
         }
         
         console.log('successful login')
