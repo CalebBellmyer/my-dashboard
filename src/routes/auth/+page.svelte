@@ -1,21 +1,26 @@
 <script lang="ts">
   import type { ActionData } from './$types';
 
-  export let form: ActionData | undefined;
+  let { form }: { form?: ActionData } = $props();  
 
-  // State variable to control which view is shown: 'login' or 'signup'
-  // This will also control the flip state
-  let currentView: 'login' | 'signup' = 'login';
+  let currentView = $state<'login' | 'signup'>('login');
+  let emailInput = $state('');
+  let passwordInput = $state('');
+
+  $effect(() => {
+    if (form && 'email' in form && typeof form.email  === 'string') {
+      emailInput = form.email;
+    }
+  })
 
   // Function to switch the view
   function setView(view: 'login' | 'signup') {
     currentView = view;
     // Clear previous form action results when switching views
     form = undefined;
+    emailInput = '';
+    passwordInput = '';
   }
-
-  // Reactive variable for the email input value
-  $: emailValue = (form && 'email' in form && typeof form.email === 'string') ? form.email : '';
 
 </script>
 
@@ -40,7 +45,7 @@
                 required
                 placeholder="you@example.com"
                 class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                bind:value={emailValue}
+                bind:value={emailInput}
               />
             </div>
             <div>
@@ -52,6 +57,7 @@
                 required
                 placeholder="••••••••"
                 class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                bind:value={passwordInput}
               />
             </div>
             <div>
@@ -66,7 +72,7 @@
           <div class="text-center mt-4">
             <button
               type="button"
-              on:click={() => setView('signup')}
+              onclick={() => setView('signup')}
               class="text-sm text-purple-400 hover:text-purple-300 hover:underline focus:outline-none focus:underline"
             >
               Need an account? Sign Up
@@ -96,7 +102,7 @@
                 required
                 placeholder="you@example.com"
                 class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                bind:value={emailValue}
+                bind:value={emailInput}
               />
             </div>
             <div>
@@ -108,6 +114,7 @@
                 required
                 placeholder="Min. 8 chars, 1 upper, 1 lower, 1 digit, 1 special"
                 class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-200 shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                bind:value={passwordInput}
               />
             </div>
             <div>
@@ -122,7 +129,7 @@
            <div class="text-center mt-4">
             <button
               type="button"
-              on:click={() => setView('login')}
+              onclick={() => setView('login')}
               class="text-sm text-purple-400 hover:text-purple-300 hover:underline focus:outline-none focus:underline"
             >
               Already have an account? Login
