@@ -1,4 +1,4 @@
-// src/+page.svelte 
+
 
 <script lang="ts">
   // Import the $page store to access page data, including the user session
