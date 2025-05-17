@@ -148,8 +148,11 @@ export const actions: Actions = {
     if (typeof book !== 'string' || typeof chapter !== 'string') {
       return fail(400, { logReadingError: 'Book and chapter must be provided as text.', book, chapter });
     }
-    // Book and chapter can be empty if desired, they will be stored as null.
-    // Add specific validation here if they should not be empty.
+
+    if (book.length < 1 || chapter.length < 1) {
+      return fail(400, { logReadingError: 'Neither book or chapter can be empty.', book, chapter });
+    }
+   
 
     try {
       const { error: insertError } = await supabase
@@ -157,8 +160,8 @@ export const actions: Actions = {
         .insert({
           user_id: user.id,
           read_date: readDate,
-          reading_book: book.trim() || null,
-          reading_chapter: chapter.trim() || null
+          reading_book: book.toLowerCase().trim(),
+          reading_chapter: chapter.trim()
         });
 
       if (insertError) {
