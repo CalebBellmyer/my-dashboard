@@ -5,6 +5,7 @@
   import WeatherWidget from '$lib/components/WeatherWidget.svelte';
   import GitHubWidget from '$lib/components/GitHubWidget.svelte';
   import LottoWidget from '$lib/components/LottoWidget.svelte';
+	import BibleTrackerWidget from '$lib/components/BibleTrackerWidget.svelte';
 
   $: user = $page.data.user;
   export let data;
@@ -43,7 +44,9 @@
     </WidgetCard>
 
     <WidgetCard >
-        <p>Reading tracker and notes...</p>
+        <BibleTrackerWidget 
+        bibleStudy={data?.bibleStudy}
+        formActionData={form}/>
     </WidgetCard>
 
       </div>
