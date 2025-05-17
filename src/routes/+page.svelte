@@ -1,3 +1,5 @@
+// src/+page.svelte 
+
 <script lang="ts">
   // Import the $page store to access page data, including the user session
   import { page } from '$app/stores';
@@ -10,12 +12,6 @@
   $: user = $page.data.user;
   export let data;
   export let form;
-
-  $: {
-  console.log("+page.svelte: data prop updated", JSON.stringify(data));
-  console.log("+page.svelte: form prop updated", JSON.stringify(form));
-}
-
 
 </script>
 
